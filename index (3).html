@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DailyNest - English News</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background: #f5f6fa;
+      padding: 1rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    header h1 {
+      color: #2f3640;
+      font-size: 2rem;
+    }
+
+    .categories {
+      display: flex;
+      overflow-x: auto;
+      gap: 0.5rem;
+      margin: 1rem 0;
+      padding-bottom: 0.5rem;
+    }
+
+    .categories button {
+      flex: 0 0 auto;
+      background-color: #e1e1e1;
+      border: none;
+      border-radius: 20px;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .categories button.active,
+    .categories button:hover {
+      background-color: #40739e;
+      color: white;
+    }
+
+    .news-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+
+    .card-content {
+      padding: 1rem;
+      flex-grow: 1;
+    }
+
+    .card-content h3 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+      color: #2f3640;
+    }
+
+    .card-content p {
+      font-size: 0.9rem;
+      color: #636e72;
+      margin-bottom: 1rem;
+    }
+
+    .read-more {
+      background-color: #40739e;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 5px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      align-self: start;
+    }
+
+    .error {
+      color: red;
+      text-align: center;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>DailyNest</h1>
+    <div class="categories" id="categoryBar">
+      <button class="active" data-category="general">General</button>
+      <button data-category="world">World</button>
+      <button data-category="nation">Nation</button>
+      <button data-category="business">Business</button>
+      <button data-category="technology">Technology</button>
+      <button data-category="sports">Sports</button>
+      <button data-category="entertainment">Entertainment</button>
+      <button data-category="science">Science</button>
+      <button data-category="health">Health</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="news" class="news-container"></div>
+    <div id="error" class="error"></div>
+  </main>
+
+  <script>
+    const newsContainer = document.getElementById("news");
+    const errorDiv = document.getElementById("error");
+    const buttons = document.querySelectorAll('.categories button');
+
+    const API_KEY = '506bb94e0cb52c381ace2f696517e531'; // Updated API Key
+    const LANG = 'en';
+    const BASE_URL = 'https://gnews.io/api/v4/top-headlines';
+
+    async function fetchNews(category = 'general') {
+      errorDiv.textContent = '';
+      newsContainer.innerHTML = '<p>Loading...</p>';
+      try {
+        const url = `${BASE_URL}?category=${category}&lang=${LANG}&token=${API_KEY}`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (!data.articles || data.articles.length === 0) {
+          throw new Error("No news found.");
+        }
+
+        displayNews(data.articles);
+      } catch (err) {
+        errorDiv.textContent = "Failed to load news. Please try again later.";
+        newsContainer.innerHTML = '';
+        console.error(err);
+      }
+    }
+
+    function displayNews(articles) {
+      newsContainer.innerHTML = '';
+      articles.forEach(article => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+          <img src="${article.image || 'https://via.placeholder.com/400x200?text=No+Image'}" alt="News Image">
+          <div class="card-content">
+            <h3>${article.title}</h3>
+            <p>${article.description || 'No description available.'}</p>
+            <a class="read-more" href="${article.url}" target="_blank">Read More</a>
+          </div>
+        `;
+        newsContainer.appendChild(card);
+      });
+    }
+
+    buttons.forEach(button => {
+      button.addEventListener('click', () => {
+        document.querySelector('.categories button.active').classList.remove('active');
+        button.classList.add('active');
+        const category = button.getAttribute('data-category');
+        fetchNews(category);
+      });
+    });
+
+    // Initial load
+    fetchNews();
+  </script>
+</body>
+</html>
